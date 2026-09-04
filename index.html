@@ -1,59 +1,244 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eda AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eda AI">
+<title>Eda AI</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:-apple-system,system-ui,sans-serif; background:#f4f3f6; min-height:100vh; }
+  .screen { display:none; min-height:100vh; }
+  .screen.on { display:block; }
+
+  /* ---- BOSH SAHIFA ---- */
+  #home { background:linear-gradient(#4a4650 0%,#b9b6bd 45%,#f4f3f6 70%); color:#fff; padding-bottom:130px; }
+  .header { text-align:center; padding:60px 0 20px; font-size:32px; font-weight:600; }
+  .days { display:flex; justify-content:space-around; padding:0 12px; }
+  .day { text-align:center; width:52px; padding:10px 0; border-radius:14px; font-size:16px; opacity:.85; }
+  .day span { display:block; margin-top:14px; font-size:20px; }
+  .day.active { border:2px solid #fff; background:rgba(255,255,255,.2); opacity:1; }
+  .day.future { opacity:.45; }
+  .ring-wrap { display:flex; justify-content:center; margin:40px 0 30px; }
+  .ring { position:relative; width:250px; height:250px; }
+  .ring svg { transform:rotate(-90deg); }
+  .ring .txt { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring .txt b { font-size:56px; font-weight:500; }
+  .ring .txt small { font-size:20px; opacity:.85; margin-top:4px; text-align:center; }
+  .macros { display:flex; gap:12px; padding:0 16px; }
+  .macro { flex:1; background:#fff; border-radius:20px; padding:16px 14px; color:#111; }
+  .macro .val { font-size:22px; font-weight:600; }
+  .macro .lbl { font-size:13px; color:#444; margin-top:4px; }
+  .macro .bar { height:4px; background:#e6e6e6; border-radius:4px; margin-top:12px; overflow:hidden; }
+  .macro .bar i { display:block; height:100%; background:#222; width:0%; transition:.4s; }
+  h2 { color:#111; font-size:24px; padding:30px 16px 14px; }
+  .empty { margin:0 16px; background:#fff; border-radius:20px; padding:36px 24px; text-align:center; color:#111; }
+  .empty b { font-size:22px; display:block; margin-bottom:12px; }
+  .empty p { font-size:16px; color:#333; }
+  .list { margin:0 16px; display:flex; flex-direction:column; gap:10px; }
+  .item { background:#fff; border-radius:16px; padding:14px 16px; color:#111; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .item small { color:#666; font-size:13px; }
+  .item .del { color:#c33; background:none; border:none; font-size:22px; padding:4px 8px; }
+
+  .nav { position:fixed; bottom:0; left:0; right:0; height:90px; background:#fff; display:flex; justify-content:space-between; align-items:center; padding:0 40px; border-radius:24px 24px 0 0; z-index:5; }
+  .nav button { background:none; border:none; font-size:28px; color:#111; }
+  .plus { position:absolute; left:50%; top:-40px; transform:translateX(-50%); width:110px; height:110px; border-radius:50%; background:#221b2c; color:#fff !important; font-size:56px !important; border:6px solid #f4f3f6 !important; }
+
+  /* ---- SOZLAMALAR ---- */
+  #settings { padding:60px 20px; color:#111; }
+  .top { display:flex; align-items:center; gap:24px; margin-bottom:30px; }
+  .top button { background:none; border:none; font-size:30px; }
+  .top h1 { font-size:30px; font-weight:600; }
+  .card { background:#fff; border:1px solid #e3e3e3; border-radius:20px; padding:8px 20px; }
+  .row { display:flex; align-items:center; gap:16px; padding:18px 0; border-bottom:1px solid #eee; }
+  .row:last-child { border-bottom:none; }
+  .row .ic { width:56px; height:56px; border-radius:50%; border:3px solid #ddd; display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .row .nm { flex:1; font-size:17px; }
+  .row input { width:90px; font-size:20px; text-align:right; border:none; border-bottom:2px solid #ccc; padding:4px; background:none; outline:none; }
+  .key { margin-top:24px; }
+  .key label { display:block; font-size:14px; color:#555; margin-bottom:8px; }
+  .key input { width:100%; padding:14px; border:1px solid #ccc; border-radius:14px; font-size:15px; }
+  .btn { width:100%; padding:18px; border:none; border-radius:18px; background:#221b2c; color:#fff; font-size:18px; font-weight:600; margin-top:20px; }
+  .btn.light { background:#eee; color:#111; margin-top:10px; }
+
+  /* ---- MODALLAR ---- */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; z-index:20; }
+  .overlay.on { display:flex; }
+  .sheet { width:100%; background:#fff; border-radius:28px 28px 0 0; padding:20px 20px 40px; color:#111; max-height:92vh; overflow:auto; }
+  .sheet h3 { font-size:22px; margin-bottom:16px; text-align:center; }
+  .opt { display:flex; align-items:center; gap:16px; padding:18px; background:#f4f3f6; border-radius:18px; margin-bottom:10px; font-size:18px; font-weight:500; }
+  .opt span { font-size:28px; }
+  textarea { width:100%; height:110px; border:1px solid #ccc; border-radius:16px; padding:14px; font-size:17px; resize:none; font-family:inherit; }
+  .prev { width:100%; max-height:220px; object-fit:cover; border-radius:16px; margin-bottom:14px; }
+  .res { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+  .res div { background:#f4f3f6; border-radius:14px; padding:12px; }
+  .res label { font-size:12px; color:#666; display:block; }
+  .res input { width:100%; border:none; background:none; font-size:22px; font-weight:600; outline:none; }
+  .name-in { width:100%; border:none; border-bottom:2px solid #ddd; font-size:20px; font-weight:600; padding:8px 0; outline:none; }
+  .load { text-align:center; padding:40px 0; font-size:18px; }
+  .spin { width:40px; height:40px; border:4px solid #ddd; border-top-color:#221b2c; border-radius:50%; margin:0 auto 16px; animation:s 1s linear infinite; }
+  @keyframes s { to { transform:rotate(360deg); } }
+</style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-    <div class="max-w-md mx-auto min-h-screen bg-white shadow">
-        <!-- Header -->
-        <div class="bg-gradient-to-b from-gray-800 to-gray-900 text-white p-6 text-center">
-            <h1 class="text-3xl font-bold">Eda AI</h1>
-            <p class="text-gray-400 mt-1">Ovqat kaloriya hisoblagichi</p>
-        </div>
+<!-- ============ BOSH SAHIFA ============ -->
+<div id="home" class="screen on">
+  <div class="header">Eda AI</div>
+  <div class="days" id="days"></div>
+  <div class="ring-wrap"><div class="ring">
+    <svg width="250" height="250">
+      <circle cx="125" cy="125" r="118" stroke="rgba(255,255,255,.35)" stroke-width="3" fill="none"/>
+      <circle id="ringFill" cx="125" cy="125" r="118" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="741" stroke-dashoffset="0"/>
+    </svg>
+    <div class="txt"><b id="kcalLeft">0</b><small>Qolgan<br>kaloriyalar</small></div>
+  </div></div>
+  <div class="macros">
+    <div class="macro">🍗 <span class="val" id="pLeft">0g</span><div class="lbl">Qolgan oqsil</div><div class="bar"><i id="pBar"></i></div></div>
+    <div class="macro">🌾 <span class="val" id="cLeft">0g</span><div class="lbl">Qolgan uglevod</div><div class="bar"><i id="cBar"></i></div></div>
+    <div class="macro">🥑 <span class="val" id="fLeft">0g</span><div class="lbl">Qolgan yog'lar</div><div class="bar"><i id="fBar"></i></div></div>
+  </div>
+  <h2>Yaqinda iste'mol qilindi</h2>
+  <div id="foodArea"></div>
+</div>
 
-        <!-- Kaloriya -->
-        <div class="p-6 text-center">
-            <div class="text-6xl font-bold text-gray-800">2239</div>
-            <div class="text-gray-500">Qolgan kaloriyalar</div>
-        </div>
+<!-- ============ SOZLAMALAR ============ -->
+<div id="settings" class="screen">
+  <div class="top"><button onclick="show('home')">✕</button><h1>Maqsadni sozlash</h1></div>
+  <div class="card">
+    <div class="row"><div class="ic">🔥</div><div class="nm">Kaloriya maqsadi</div><input type="number" id="gKcal"></div>
+    <div class="row"><div class="ic">🍗</div><div class="nm">Oqsil maqsadi (g)</div><input type="number" id="gP"></div>
+    <div class="row"><div class="ic">🌾</div><div class="nm">Uglevod maqsadi (g)</div><input type="number" id="gC"></div>
+    <div class="row"><div class="ic">🥑</div><div class="nm">Yog' maqsadi (g)</div><input type="number" id="gF"></div>
+  </div>
+  <div class="key">
+    <label>Gemini API kalit (aistudio.google.com dan)</label>
+    <input type="password" id="apiKey" placeholder="AIza...">
+  </div>
+  <button class="btn" onclick="saveSettings()">Saqlash</button>
+</div>
 
-        <!-- Makrolar -->
-        <div class="grid grid-cols-3 gap-3 px-6">
-            <div class="bg-white border p-4 rounded-2xl text-center">
-                <div class="text-2xl">🐟</div>
-                <div class="font-semibold">172g</div>
-                <div class="text-sm text-gray-500">Oqsillar</div>
-            </div>
-            <div class="bg-white border p-4 rounded-2xl text-center">
-                <div class="text-2xl">🌾</div>
-                <div class="font-semibold">231g</div>
-                <div class="text-sm text-gray-500">Uglevodlar</div>
-            </div>
-            <div class="bg-white border p-4 rounded-2xl text-center">
-                <div class="text-2xl">🥑</div>
-                <div class="font-semibold">70g</div>
-                <div class="text-sm text-gray-500">Yog'lar</div>
-            </div>
-        </div>
+<!-- ============ PASTKI PANEL ============ -->
+<div class="nav">
+  <button onclick="show('home')">⌂</button>
+  <button class="plus" onclick="openSheet('choose')">+</button>
+  <button onclick="show('settings')">⚙︎</button>
+</div>
 
-        <!-- Qo'shish tugmasi -->
-        <div class="p-6">
-            <button onclick="addFood()" 
-                    class="w-full bg-black text-white py-4 rounded-2xl text-lg font-semibold active:scale-95 transition">
-                + Ovqat qo'shish
-            </button>
-        </div>
+<!-- ============ MODAL ============ -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="galIn" accept="image/*" hidden>
+
+<script>
+// ================= MA'LUMOTLAR =================
+const todayKey = new Date().toISOString().slice(0,10);
+let goal  = JSON.parse(localStorage.getItem('goal')) || { kcal:2239, p:172, c:231, f:70 };
+let foods = JSON.parse(localStorage.getItem('foods_'+todayKey)) || [];
+let apiKey = localStorage.getItem('apiKey') || '';
+const save = () => localStorage.setItem('foods_'+todayKey, JSON.stringify(foods));
+
+// ================= EKRANLAR =================
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='settings') fillSettings(); window.scrollTo(0,0); }
+function fillSettings(){ gKcal.value=goal.kcal; gP.value=goal.p; gC.value=goal.c; gF.value=goal.f; document.getElementById('apiKey').value=apiKey; }
+function saveSettings(){
+  goal={kcal:+gKcal.value||2000,p:+gP.value||150,c:+gC.value||200,f:+gF.value||60};
+  apiKey=document.getElementById('apiKey').value.trim();
+  localStorage.setItem('goal',JSON.stringify(goal)); localStorage.setItem('apiKey',apiKey);
+  render(); show('home');
+}
+
+// ================= HAFTA KUNLARI =================
+const names=['Yak','Dush','Sesh','Chor','Pay','Jum','Shan']; const now=new Date(); let dh='';
+for(let i=-4;i<=1;i++){ const d=new Date(now); d.setDate(now.getDate()+i);
+  dh+=`<div class="day ${i===0?'active':i>0?'future':''}">${names[d.getDay()]}<span>${String(d.getDate()).padStart(2,'0')}</span></div>`; }
+document.getElementById('days').innerHTML=dh;
+
+// ================= CHIZISH =================
+function render(){
+  const sum=foods.reduce((a,f)=>({kcal:a.kcal+f.kcal,p:a.p+f.p,c:a.c+f.c,f:a.f+f.f}),{kcal:0,p:0,c:0,f:0});
+  const left=k=>Math.max(0,Math.round(goal[k]-sum[k]));
+  kcalLeft.textContent=left('kcal').toLocaleString('ru');
+  ringFill.style.strokeDashoffset=741*Math.min(1,sum.kcal/goal.kcal);
+  pLeft.textContent=left('p')+'g'; cLeft.textContent=left('c')+'g'; fLeft.textContent=left('f')+'g';
+  pBar.style.width=Math.min(100,sum.p/goal.p*100)+'%'; cBar.style.width=Math.min(100,sum.c/goal.c*100)+'%'; fBar.style.width=Math.min(100,sum.f/goal.f*100)+'%';
+  foodArea.innerHTML = !foods.length
+    ? `<div class="empty"><b>Hozircha ma'lumot yo'q!</b><p>Bugungi ovqatlaringizni tez suratga olib kuzatishni boshlang</p></div>`
+    : '<div class="list">'+foods.map((f,i)=>`<div class="item"><div><b>${f.name}</b><br><small>O ${f.p}g · U ${f.c}g · Y ${f.f}g · ${f.time}</small></div><b>${f.kcal} kkal</b><button class="del" onclick="delFood(${i})">×</button></div>`).reverse().join('')+'</div>';
+}
+function delFood(i){ foods.splice(i,1); save(); render(); }
+render();
+
+// ================= MODAL =================
+const overlay=document.getElementById('overlay'), sheet=document.getElementById('sheet');
+function closeSheet(){ overlay.classList.remove('on'); }
+function openSheet(type){
+  overlay.classList.add('on');
+  if(type==='choose') sheet.innerHTML=`<h3>Ovqat qo'shish</h3>
+    <div class="opt" onclick="camIn.click()"><span>📷</span> Rasmga olish</div>
+    <div class="opt" onclick="galIn.click()"><span>🖼</span> Galereyadan tanlash</div>
+    <div class="opt" onclick="openSheet('text')"><span>✍️</span> Matn orqali yozish</div>`;
+  if(type==='text') sheet.innerHTML=`<h3>Nima yedingiz?</h3>
+    <textarea id="txtIn" placeholder="Masalan: 1 kosa osh va 2 dona non"></textarea>
+    <button class="btn" onclick="analyzeText()">Hisoblash</button>`;
+  if(type==='load') sheet.innerHTML=`<div class="load"><div class="spin"></div>AI tahlil qilmoqda...</div>`;
+}
+function showResult(r,img){
+  sheet.innerHTML=`<h3>Natija</h3>${img?`<img class="prev" src="${img}">`:''}
+    <input class="name-in" id="rName" value="${r.name}">
+    <div class="res">
+      <div><label>Kaloriya</label><input type="number" id="rK" value="${r.kcal}"></div>
+      <div><label>Oqsil (g)</label><input type="number" id="rP" value="${r.p}"></div>
+      <div><label>Uglevod (g)</label><input type="number" id="rC" value="${r.c}"></div>
+      <div><label>Yog' (g)</label><input type="number" id="rF" value="${r.f}"></div>
     </div>
+    <button class="btn" onclick="addFood()">Qo'shish</button>
+    <button class="btn light" onclick="closeSheet()">Bekor qilish</button>`;
+}
+function addFood(){
+  foods.push({name:rName.value,kcal:+rK.value,p:+rP.value,c:+rC.value,f:+rF.value,time:new Date().toTimeString().slice(0,5)});
+  save(); render(); closeSheet();
+}
+function showError(msg){ sheet.innerHTML=`<h3>Xatolik</h3><p style="color:#c33;text-align:center">${msg}</p><button class="btn light" onclick="closeSheet()">Yopish</button>`; }
 
-    <script>
-        function addFood() {
-            alert("Bu funksiya keyinroq qo'shiladi!");
-        }
-    </script>
+// ================= RASM =================
+camIn.onchange=e=>handleImage(e.target.files[0]); galIn.onchange=e=>handleImage(e.target.files[0]);
+function handleImage(file){
+  if(!file) return; camIn.value=''; galIn.value='';
+  const img=new Image(); img.onload=()=>{
+    const c=document.createElement('canvas'); const s=Math.min(1,1024/Math.max(img.width,img.height));
+    c.width=img.width*s; c.height=img.height*s; c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    const dataUrl=c.toDataURL('image/jpeg',.85);
+    askAI([{inline_data:{mime_type:'image/jpeg',data:dataUrl.split(',')[1]}},{text:PROMPT}],dataUrl);
+  }; img.src=URL.createObjectURL(file);
+}
+function analyzeText(){ const t=txtIn.value.trim(); if(!t) return; askAI([{text:PROMPT+'\nOvqat tavsifi: '+t}],null); }
 
+// ================= AI =================
+const PROMPT=`Sen ovqat tahlilchisisan. Berilgan ovqatning taxminiy ozuqaviy qiymatini aniqla (barcha porsiya uchun).
+Faqat quyidagi JSON formatda javob ber, boshqa hech narsa yozma:
+{"name":"ovqat nomi o'zbek tilida","kcal":son,"p":oqsil_gramm,"c":uglevod_gramm,"f":yog_gramm}`;
+
+async function askAI(parts,img){
+  if(!apiKey){ closeSheet(); alert('Avval ⚙︎ sozlamalarda Gemini API kalitini kiriting'); show('settings'); return; }
+  openSheet('load');
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts}],generationConfig:{responseMimeType:'application/json'}})
+    });
+    const j=await r.json();
+    if(j.error) throw new Error(j.error.message);
+    const txt=j.candidates[0].content.parts[0].text;
+    const d=JSON.parse(txt.match(/\{[\s\S]*\}/)[0]);
+    showResult({name:d.name||'Ovqat',kcal:Math.round(d.kcal||0),p:Math.round(d.p||0),c:Math.round(d.c||0),f:Math.round(d.f||0)},img);
+  }catch(e){ showError(e.message); }
+}
+</script>
 </body>
 </html>
